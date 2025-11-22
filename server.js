@@ -29,5 +29,4 @@ app.listen(PORT, () => {
   console.log(`   POST http://localhost:${PORT}/api/lists`);
   console.log(`   POST http://localhost:${PORT}/api/lists/:listName/add`);
   console.log(`   POST http://localhost:${PORT}/api/lists/:listName/remove`);
-  console.log(`   GET  http://localhost:${PORT}/api/health`);
 });
