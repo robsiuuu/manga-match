@@ -1,0 +1,100 @@
+/* Header */
+.header {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-image {
+  width: 75px;
+  height: 75px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.logo-text h1 {
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: #f8fafc;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.nav-button:hover {
+  background: #e5e7eb;
+}
+
+.liked-badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+
+/* Make sure the navigation buttons have consistent icon spacing */
+.nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; /* Ensure consistent spacing between icon and text */
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.nav-button:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Optional: Add a subtle animation for the shuffle button */
+.nav-button:active {
+  transform: scale(0.98);
+}
