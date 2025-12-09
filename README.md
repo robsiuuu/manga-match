@@ -40,10 +40,11 @@ Before running this project, make sure you have:
 
 ## Installation
 
-### 1. Clone the Repository
+### 1. Get Files
 ```bash
-git clone https://github.com/yourusername/manga-match.git
-cd manga-match
+download the zip files from main
+and extract
+open in VS code
 ```
 
 ### 2. Backend Setup
