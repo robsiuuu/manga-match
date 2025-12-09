@@ -104,17 +104,30 @@ router.get(
               // Function to send message to opener and close
               function closeAndNotify() {
                 try {
-                  // Send message to parent window
+                  // Send message to parent window with specific origin
                   if (window.opener && !window.opener.closed) {
+                    // Get the origin we should send to
+                    const targetOrigin = '${CLIENT_BASE_URL}';
+                    
                     window.opener.postMessage({
                       type: 'AUTH_SUCCESS',
                       message: 'User authenticated successfully',
-                      timestamp: Date.now()
-                    }, '*');
+                      timestamp: Date.now(),
+                      user: {
+                        name: '${req.user.name}',
+                        email: '${req.user.email}'
+                      }
+                    }, targetOrigin);
                     
-                    console.log('✅ Sent auth success message to opener');
+                    console.log('✅ Sent auth success message to opener at:', targetOrigin);
                   } else {
                     console.log('⚠️ No opener found or opener closed');
+                    // If no opener, redirect parent
+                    try {
+                      window.opener.location.href = '${CLIENT_BASE_URL}';
+                    } catch (e) {
+                      // Can't redirect opener
+                    }
                   }
                   
                   // Close this window
@@ -125,19 +138,10 @@ router.get(
                 }
               }
               
-              // Auto-send message and close after 2 seconds
+              // Auto-send message and close after 1.5 seconds
               setTimeout(() => {
                 closeAndNotify();
-              }, 2000);
-              
-              // Also send message immediately
-              if (window.opener && !window.opener.closed) {
-                window.opener.postMessage({
-                  type: 'AUTH_SUCCESS',
-                  message: 'User authenticated successfully',
-                  timestamp: Date.now()
-                }, '*');
-              }
+              }, 1500);
             </script>
           </div>
         </body>
@@ -147,7 +151,48 @@ router.get(
       res.send(html);
     } catch (error) {
       console.error("❌ Auth callback error:", error);
-      res.redirect(`${CLIENT_BASE_URL}/login?error=callback_error`);
+      
+      // Send error page for popup
+      const errorHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Authentication Failed</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+              padding: 50px;
+              background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+              color: white;
+              margin: 0;
+              height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .container {
+              background: rgba(255, 255, 255, 0.1);
+              padding: 40px;
+              border-radius: 20px;
+              backdrop-filter: blur(10px);
+              max-width: 500px;
+              width: 90%;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+            <h1>Authentication Failed</h1>
+            <p>Sorry, something went wrong during authentication.</p>
+            <button onclick="window.close()">Close Window</button>
+          </div>
+        </body>
+        </html>
+      `;
+      
+      res.send(errorHtml);
     }
   }
 );

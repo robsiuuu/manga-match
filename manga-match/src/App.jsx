@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Header from "./components/layout/Header";
 import SwipeInterface from "./components/layout/SwipeInterface";
 import LikedPage from "./components/pages/LikedPage";
@@ -23,25 +23,25 @@ function App() {
   const checkAuthStatus = async () => {
     try {
       const authStatus = await api.checkAuthStatus();
-      
+
       if (authStatus.isAuthenticated) {
         if (!user || user._id !== authStatus.user._id) {
-          console.log('✅ User authenticated:', authStatus.user.name);
+          console.log("✅ User authenticated:", authStatus.user.name);
           setUser(authStatus.user);
-          
+
           // Load user data
           const [userLikes, userLists] = await Promise.all([
             api.getLikedComics(),
-            api.getLists()
+            api.getLists(),
           ]);
-          
+
           setLikedComics(userLikes);
           setLists(userLists);
         }
         return true;
       } else {
         if (user !== null) {
-          console.log('👋 User logged out');
+          console.log("👋 User logged out");
           setUser(null);
           setLikedComics([]);
           setLists({});
@@ -57,62 +57,70 @@ function App() {
   // ============ MESSAGE LISTENER FOR OAUTH POPUP ============
   useEffect(() => {
     const handleMessage = async (event) => {
-      // Only process messages from our OAuth server (localhost:3001 in dev)
-      if (event.origin !== window.location.origin && 
-          !event.origin.includes('localhost:3001') &&
-          !event.origin.includes('localhost:3000')) {
+      console.log("📨 Message received from:", event.origin, event.data);
+
+      // Only accept messages from our CLIENT_BASE_URL
+      const allowedOrigin = import.meta.env.PROD
+        ? window.location.origin // Same origin in production
+        : "http://localhost:5173"; // Frontend in development
+
+      if (event.origin !== allowedOrigin) {
+        console.log("Blocked message from unauthorized origin:", event.origin);
         return;
       }
-      
-      if (event.data?.type === 'AUTH_SUCCESS') {
-        console.log('✅ AUTH_SUCCESS message received');
-        
-        // Close the popup
+
+      if (event.data?.type === "AUTH_SUCCESS") {
+        console.log("✅ AUTH_SUCCESS message received");
+
+        // Close the popup if we can
         try {
-          event.source?.close();
+          if (event.source && !event.source.closed) {
+            event.source.close();
+          }
         } catch (e) {
           // Ignore close errors
         }
-        
-        // Wait a moment for session to be set
-        setTimeout(async () => {
-          setLoading(true);
-          
-          try {
-            // Force a fresh auth check
-            const isAuthenticated = await checkAuthStatus();
-            
-            if (isAuthenticated) {
-              // Refresh comics with user preferences
-              const comicsData = await api.getComics();
-              setComics(comicsData);
-              
-              // Navigate to discover
-              setCurrentPage("discover");
-              
-              // Show success message
-              setShowLoginPrompt(false);
-            } else {
-              console.log('❌ Auth check failed after OAuth success');
-            }
-          } catch (error) {
-            console.error('Error after OAuth:', error);
-          } finally {
-            setLoading(false);
+
+        // Immediately check auth status
+        setLoading(true);
+        try {
+          const isAuthenticated = await checkAuthStatus();
+
+          if (isAuthenticated) {
+            // Refresh comics with user preferences
+            const comicsData = await api.getComics();
+            setComics(comicsData);
+
+            // Navigate to discover
+            setCurrentPage("discover");
+
+            // Show success message
+            setShowLoginPrompt(false);
+
+            // Optional: Show a success toast
+            alert("Login successful! Welcome to MangaMatch!");
+          } else {
+            console.log("❌ Auth check failed after OAuth success");
+            alert("Login failed. Please try again.");
           }
-        }, 1000);
+        } catch (error) {
+          console.error("Error after OAuth:", error);
+          alert("Error during login. Please try again.");
+        } finally {
+          setLoading(false);
+        }
       }
-      
-      if (event.data?.type === 'AUTH_ERROR') {
-        console.error('❌ Auth error:', event.data.error);
-        alert('Login failed: ' + event.data.error);
+
+      if (event.data?.type === "AUTH_ERROR") {
+        console.error("❌ Auth error:", event.data.error);
+        alert("Login failed: " + (event.data.error || "Unknown error"));
       }
     };
-    
-    window.addEventListener('message', handleMessage);
-    
+
+    window.addEventListener("message", handleMessage);
+
     return () => {
-      window.removeEventListener('message', handleMessage);
+      window.removeEventListener("message", handleMessage);
     };
   }, [user]);
 
@@ -121,23 +129,21 @@ function App() {
     const initializeApp = async () => {
       try {
         setLoading(true);
-        
+
         // Check auth status
         await checkAuthStatus();
-        
+
         // Load comics for discovery
         const comicsData = await api.getComics();
         setComics(comicsData);
-        
       } catch (error) {
         console.error("Initialization error:", error);
         setError("Failed to load app");
-        
+
         // Reset state on error
         setUser(null);
         setLikedComics([]);
         setLists({});
-        
       } finally {
         setLoading(false);
       }
@@ -168,41 +174,46 @@ function App() {
   // ============ IMPROVED GOOGLE LOGIN ============
   const handleGoogleLogin = () => {
     console.log("Opening Google OAuth...");
-    
+
     // Generate unique state to prevent CSRF
     const state = Math.random().toString(36).substring(2);
-    
+
     // Calculate popup position (centered)
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
-    
+
+    // Determine backend URL based on environment
+    const backendUrl = import.meta.env.PROD
+      ? window.location.origin // Same origin in production
+      : "http://localhost:3001";
+
     // Open popup
     const popup = window.open(
-      `http://localhost:3001/auth/google?state=${state}&redirect=popup`,
+      `${backendUrl}/auth/google?state=${state}&redirect=popup`,
       "google_auth",
       `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
     );
-    
+
     if (!popup) {
       alert("Popup blocked! Please allow popups for this site.");
       return;
     }
-    
+
     // Check for popup closure as fallback
     const checkPopup = setInterval(() => {
       if (popup.closed) {
         clearInterval(checkPopup);
-        console.log('Popup closed, checking auth status...');
-        
+        console.log("Popup closed, checking auth status...");
+
         // Fallback check if message didn't come through
         setTimeout(async () => {
           await checkAuthStatus();
         }, 1500);
       }
     }, 1000);
-    
+
     // Clean up
     setTimeout(() => {
       clearInterval(checkPopup);
@@ -214,17 +225,16 @@ function App() {
     try {
       setLoading(true);
       await api.logout();
-      
+
       // Reset all user state
       setUser(null);
       setLikedComics([]);
       setLists({});
       setCurrentPage("discover");
-      
+
       // Refresh comics for guest mode
       const comicsData = await api.getComics();
       setComics(comicsData);
-      
     } catch (error) {
       console.error("Logout error:", error);
       // Still reset local state
@@ -257,7 +267,6 @@ function App() {
       setComics(randomComics);
       setCurrentPage("discover");
       setSwipeKey((prev) => prev + 1);
-      
     } catch (error) {
       console.error("Failed to randomize comics:", error);
       setError("Failed to load new recommendations.");
@@ -274,15 +283,14 @@ function App() {
         setShowLoginPrompt(true);
         return;
       }
-      
+
       await api.likeComic(comicId);
-      setLikedComics(prev => [...prev, comicId]);
-      
+      setLikedComics((prev) => [...prev, comicId]);
     } catch (error) {
       console.error("Like error:", error);
-      
+
       // If unauthorized, show login prompt
-      if (error.response?.status === 401 || error.message.includes('login')) {
+      if (error.response?.status === 401 || error.message.includes("login")) {
         setShowLoginPrompt(true);
       }
     }
@@ -292,16 +300,15 @@ function App() {
   const handleDislikeComic = async (comicId) => {
     try {
       if (!user) {
-        setLikedComics(prev => prev.filter(id => id !== comicId));
+        setLikedComics((prev) => prev.filter((id) => id !== comicId));
         return;
       }
-      
+
       await api.unlikeComic(comicId);
-      setLikedComics(prev => prev.filter(id => id !== comicId));
-      
+      setLikedComics((prev) => prev.filter((id) => id !== comicId));
     } catch (error) {
       console.error("Dislike error:", error);
-      setLikedComics(prev => prev.filter(id => id !== comicId));
+      setLikedComics((prev) => prev.filter((id) => id !== comicId));
     }
   };
 
@@ -312,15 +319,14 @@ function App() {
         setShowLoginPrompt(true);
         return;
       }
-      
+
       await api.createList(listName);
-      
+
       const updatedLists = await api.getLists();
       setLists(updatedLists);
-      
     } catch (error) {
       console.error("Create list error:", error);
-      alert(error.message || 'Failed to create list');
+      alert(error.message || "Failed to create list");
     }
   };
 
@@ -331,26 +337,27 @@ function App() {
         setShowLoginPrompt(true);
         return;
       }
-      
+
       if (isRemove) {
         await api.removeFromList(listName, comicId);
       } else {
         await api.addToList(listName, comicId);
       }
-      
-      setLists(prev => {
+
+      setLists((prev) => {
         const newLists = { ...prev };
         if (!newLists[listName]) newLists[listName] = [];
-        
+
         if (isRemove) {
-          newLists[listName] = newLists[listName].filter(id => id !== comicId);
+          newLists[listName] = newLists[listName].filter(
+            (id) => id !== comicId
+          );
         } else if (!newLists[listName].includes(comicId)) {
           newLists[listName] = [...newLists[listName], comicId];
         }
-        
+
         return newLists;
       });
-      
     } catch (error) {
       console.error("List update error:", error);
     }
@@ -394,7 +401,6 @@ function App() {
   // Main app
   return (
     <div className="app">
-      
       {/* Login Prompt Modal */}
       {showLoginPrompt && (
         <div className="login-prompt-modal">
