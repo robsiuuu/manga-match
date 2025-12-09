@@ -1,20 +1,7 @@
-const ANILIST_API_URL = "https://graphql.anilist.co";
-const BACKEND_URL = "http://localhost:3001";
-
-// Helper functions
-const transformAniListData = (media) => ({
-  id: media.id,
-  title: media.title.english || media.title.romaji,
-  coverImage: media.coverImage.large,
-  rating: media.averageScore ? (media.averageScore / 20).toFixed(1) : "N/A",
-  chapters: media.chapters || "?",
-  status: media.status,
-  format: media.format || "MANGA",
-  genres: media.genres || [],
-  description: media.description
-    ? media.description.replace(/<[^>]*>/g, "").substring(0, 150) + "..."
-    : "No description available",
-});
+// Use Vite's environment variable for production
+const BACKEND_URL = import.meta.env.PROD 
+  ? ''  // Empty string for same origin in production
+  : 'http://localhost:3001';
 
 const shuffleArray = (array) => {
   const shuffled = [...array];
@@ -25,45 +12,84 @@ const shuffleArray = (array) => {
   return shuffled;
 };
 
+// Fallback mock data for when AniList fails
+const getMockComics = () => {
+  const mockComics = [
+    {
+      id: 1,
+      title: "One Piece",
+      coverImage: "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx13-5pFWB2e0n2n8.jpg",
+      rating: "8.7",
+      chapters: "1100+",
+      status: "RELEASING",
+      genres: ["Action", "Adventure", "Comedy", "Drama", "Fantasy"],
+      description: "Follow Monkey D. Luffy and his pirate crew as they search for the world's ultimate treasure..."
+    },
+    {
+      id: 2,
+      title: "Naruto",
+      coverImage: "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx44-nWcJgLvAM6pV.jpg",
+      rating: "8.2",
+      chapters: "700",
+      status: "FINISHED",
+      genres: ["Action", "Adventure", "Fantasy"],
+      description: "Naruto Uzumaki, a young ninja who seeks recognition from his peers and dreams of becoming the Hokage..."
+    },
+    {
+      id: 3,
+      title: "Bleach",
+      coverImage: "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx51-c4TGro2T71cE.jpg",
+      rating: "7.8",
+      chapters: "686",
+      status: "FINISHED",
+      genres: ["Action", "Adventure", "Supernatural"],
+      description: "High school student Ichigo Kurosaki gains the powers of a Soul Reaper and must defend humans from evil spirits..."
+    },
+    {
+      id: 4,
+      title: "Demon Slayer",
+      coverImage: "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx101922-wYSikHVxDuMA.jpg",
+      rating: "8.4",
+      chapters: "205",
+      status: "FINISHED",
+      genres: ["Action", "Historical", "Supernatural"],
+      description: "After his family is slaughtered, Tanjiro Kamado becomes a demon slayer to cure his sister..."
+    },
+    {
+      id: 5,
+      title: "Jujutsu Kaisen",
+      coverImage: "https://s4.anilist.co/file/anilistcdn/media/manga/cover/medium/bx113138-CQCqF4vBvGX7.jpg",
+      rating: "8.5",
+      chapters: "247+",
+      status: "RELEASING",
+      genres: ["Action", "Fantasy", "Supernatural"],
+      description: "Yuji Itadori swallows a cursed object and becomes host to a powerful curse, entering the world of jujutsu sorcerers..."
+    }
+  ];
+  return shuffleArray(mockComics);
+};
+
 export const api = {
-  // Get comics from AniList
+  // Get comics from AniList through backend proxy
   getComics: async () => {
     try {
-      const randomPage = Math.floor(Math.random() * 50) + 1;
-      
-      const response = await fetch(ANILIST_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query ($page: Int, $perPage: Int) {
-              Page(page: $page, perPage: $perPage) {
-                media(type: MANGA, sort: POPULARITY_DESC) {
-                  id
-                  title { romaji english }
-                  coverImage { large }
-                  description
-                  averageScore
-                  chapters
-                  status
-                  format
-                  genres
-                }
-              }
-            }
-          `,
-          variables: { page: randomPage, perPage: 50 },
-        }),
+      const response = await fetch(`${BACKEND_URL}/api/anilist/comics`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        credentials: 'include',
       });
 
+      if (!response.ok) {
+        throw new Error(`Failed to fetch comics: ${response.status}`);
+      }
+
       const data = await response.json();
-      const media = data.data?.Page?.media || [];
-      const transformed = shuffleArray(media).map(transformAniListData);
-      
-      return transformed;
+      return data;
     } catch (error) {
-      console.error("❌ AniList error:", error);
-      throw error;
+      console.error("❌ Comics fetch error, using mock data:", error);
+      return getMockComics();
     }
   },
 
@@ -156,7 +182,7 @@ export const api = {
       
       if (!response.ok) {
         if (response.status === 401) {
-          return { liked: [], saved: [], reading: [] };
+          return {};
         }
         throw new Error(`Failed to fetch lists: ${response.status}`);
       }
@@ -165,11 +191,11 @@ export const api = {
       return data.lists || data.data || {};
     } catch (error) {
       console.error("❌ Get lists error:", error);
-      return { liked: [], saved: [], reading: [] };
+      return {};
     }
   },
 
-  // Create list - ADD THIS FUNCTION
+  // Create list
   createList: async (listName) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/lists`, {
@@ -195,7 +221,7 @@ export const api = {
     }
   },
 
-  // Add comic to list - ADD THIS FUNCTION
+  // Add comic to list
   addToList: async (listName, comicId) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/lists/${listName}/add`, {
@@ -221,7 +247,7 @@ export const api = {
     }
   },
 
-  // Remove comic from list - ADD THIS FUNCTION
+  // Remove comic from list
   removeFromList: async (listName, comicId) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/lists/${listName}/remove`, {
@@ -247,42 +273,29 @@ export const api = {
     }
   },
 
-  // Get comics batch
+  // Get comics batch through backend proxy
   getComicsBatch: async (ids) => {
     try {
       if (!ids || ids.length === 0) return [];
 
-      const response = await fetch(ANILIST_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: `
-            query ($ids: [Int]) {
-              Page {
-                media(id_in: $ids, type: MANGA) {
-                  id
-                  title { romaji english native }
-                  coverImage { large extraLarge color }
-                  description
-                  averageScore
-                  chapters
-                  status
-                  format
-                  genres
-                }
-              }
-            }
-          `,
-          variables: { ids: ids.map(id => parseInt(id)) },
-        }),
+      const response = await fetch(`${BACKEND_URL}/api/anilist/batch`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        credentials: 'include',
+        body: JSON.stringify({ ids }),
       });
 
-      const data = await response.json();
-      const media = data.data?.Page?.media || [];
-      return media.map(transformAniListData);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch batch: ${response.status}`);
+      }
+
+      return await response.json();
     } catch (error) {
-      console.error("❌ Batch fetch error:", error);
-      return [];
+      console.error("❌ Batch fetch error, using mock data:", error);
+      const mockComics = getMockComics();
+      return mockComics.filter(comic => ids.includes(comic.id.toString()));
     }
   },
 
