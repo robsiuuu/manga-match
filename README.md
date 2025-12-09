@@ -3,9 +3,9 @@
 A manga discovery app that helps you find your next favorite comic! Swipe through recommendations, like your favorites, and organize them into custom lists.
 
 ## 📱 Live Demo
-[![Render Deployment](https://img.shields.io/badge/Render-Deployed-blue?logo=render)](https://mangamatch.onrender.com)
+[![Render Deployment](https://img.shields.io/badge/Render-Deployed-blue?logo=render)](https://manga-match.onrender.com)
 
-**Deployed URL:** https://mangamatch.onrender.com
+**Deployed URL:** https://manga-match.onrender.com
 
 **Video Demo:** [Watch on OneDrive](https://uncg-my.sharepoint.com/:v:/g/personal/rrsiu_uncg_edu/IQCMVuUhaX2GSJ5TvDewb3WyAbx74xQPVRzCd4vF5l7QKkc?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=ROcwFP)
 
