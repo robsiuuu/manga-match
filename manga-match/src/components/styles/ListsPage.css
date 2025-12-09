@@ -1,12 +1,14 @@
-/* Lists Page */
+/* Lists Page - FIXED VERSION */
 .lists-page {
   padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
 .page-header {
   margin-bottom: 2rem;
+  padding-top: 1rem;
 }
 
 .back-button {
@@ -20,49 +22,68 @@
   padding: 0.5rem 0;
   font-size: 0.95rem;
   transition: color 0.2s ease;
+  margin-bottom: 1rem;
 }
 
 .back-button:hover {
   color: #374151;
 }
 
+.list-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
 /* Lists Overview */
 .lists-overview {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
 .list-item {
   background: white;
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   cursor: pointer;
-  transition: all 0.2s ease;
-  border-left: 4px solid #8b5cf6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e5e7eb;
+  height: fit-content;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
 }
 
 .list-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  border-color: #8b5cf6;
 }
 
 .list-item-header {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .list-item-info {
   flex: 1;
+  min-width: 0; /* Prevents text overflow */
 }
 
 .list-item-info h3 {
   margin: 0 0 0.25rem 0;
   color: #1f2937;
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .list-item-info p {
@@ -74,92 +95,100 @@
 .chevron {
   color: #9ca3af;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
 .list-item:hover .chevron {
-  transform: translateX(2px);
+  transform: translateX(4px);
+  color: #8b5cf6;
 }
 
 /* List Preview */
 .list-preview {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid #e5e7eb;
   align-items: center;
+  flex-wrap: wrap;
+  min-height: 90px;
 }
 
 .preview-cover {
-  width: 60px;
-  height: 80px;
-  border-radius: 6px;
+  width: 70px;
+  height: 95px;
+  border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   transition: transform 0.2s ease;
 }
 
 .preview-cover:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .preview-cover.placeholder {
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #9ca3af;
-  border: 1px dashed #d1d5db;
+  border: 2px dashed #d1d5db;
 }
 
 .preview-more {
-  width: 60px;
-  height: 80px;
-  background: #f3f4f6;
-  border-radius: 6px;
+  width: 70px;
+  height: 95px;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: #6b7280;
   flex-shrink: 0;
+  border: 2px solid #e5e7eb;
 }
 
 /* List Comics Grid */
 .list-comics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
 .list-comic-card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   position: relative;
+  border: 1px solid #e5e7eb;
 }
 
 .list-comic-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
 }
 
 /* Manga cover display */
 .list-comic-cover {
   width: 100%;
-  height: 400px; /* Taller for better manga display */
+  height: 380px;
   object-fit: cover;
   display: block;
+  background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
 }
 
 .list-comic-info {
-  padding: 1.25rem;
+  padding: 1.5rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -170,7 +199,7 @@
   margin: 0;
   color: #1f2937;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -187,10 +216,13 @@
 
 .rating {
   color: #f59e0b;
-  font-weight: 600;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  background: #fef3c7;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
 }
 
 .chapters {
@@ -198,27 +230,30 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  background: #f3f4f6;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
 }
 
 .genres {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .genre-tag {
-  background: #f3f4f6;
-  color: #374151;
-  padding: 0.25rem 0.6rem;
-  border-radius: 10px;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
   font-size: 0.75rem;
-  font-weight: 500;
-  border: 1px solid #e5e7eb;
+  font-weight: 600;
+  border: none;
 }
 
 .comic-description {
   color: #6b7280;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -228,79 +263,17 @@
   flex: 1;
 }
 
-/* Status badges */
-.comic-status {
-  position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  z-index: 2;
-}
-
-.status-badge {
-  padding: 0.3rem 0.7rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 8px;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.status-releasing {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.status-finished {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-.status-not_yet_released {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-/* Empty States */
-.empty-list, .empty-lists {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #6b7280;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.empty-list h3, .empty-lists h3 {
-  color: #374151;
-  margin: 1rem 0 0.5rem;
-  font-size: 1.2rem;
-}
-
-.empty-list p, .empty-lists p {
-  margin: 0;
-  font-size: 0.95rem;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  color: #6b7280;
-  font-size: 1.1rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Add to ListsPage.css */
+/* Remove Button */
 .remove-from-list-btn {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(239, 68, 68, 0.9);
+  top: 1rem;
+  right: 1rem;
+  background: rgba(239, 68, 68, 0.95);
   color: white;
   border: none;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -309,6 +282,7 @@
   opacity: 0;
   transition: all 0.2s ease;
   backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .list-comic-card:hover .remove-from-list-btn {
@@ -318,50 +292,158 @@
 .remove-from-list-btn:hover {
   background: #dc2626;
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
-.list-comic-card {
-  position: relative;
+/* Empty States */
+.empty-list, .empty-lists {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: #6b7280;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin: 2rem auto;
+  max-width: 600px;
+  border: 2px dashed #e5e7eb;
 }
 
+.empty-list svg, .empty-lists svg {
+  color: #8b5cf6;
+  opacity: 0.7;
+  margin-bottom: 1rem;
+}
+
+.empty-list h3, .empty-lists h3 {
+  color: #374151;
+  margin: 1rem 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.empty-list p, .empty-lists p {
+  margin: 0;
+  font-size: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-size: 1.1rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin: 2rem auto;
+  max-width: 400px;
+  border: 2px dashed #e5e7eb;
+}
+
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 1em;
+  animation: dots 1.5s steps(5, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60% { content: '...'; }
+  80%, 100% { content: ''; }
+}
+
+/* Count Badge */
 .count-badge {
-  background: #8b5cf6;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
   color: white;
-  padding: 0.25rem 0.75rem;
+  padding: 0.35rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .lists-page {
-    padding: 0.5rem;
+@media (max-width: 1024px) {
+  .lists-overview {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
   }
   
   .list-comics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .lists-page {
+    padding: 0.75rem;
+  }
+  
+  .lists-overview {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
   }
   
-  .list-comic-cover {
-    height: 350px;
+  .list-comics-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
   }
   
-  .list-preview {
-    gap: 0.4rem;
+  .list-comic-cover {
+    height: 320px;
   }
   
   .preview-cover,
   .preview-more {
-    width: 50px;
-    height: 70px;
+    width: 60px;
+    height: 85px;
+  }
+  
+  .list-item {
+    padding: 1.25rem;
+  }
+  
+  .list-comic-info {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .lists-overview {
+    grid-template-columns: 1fr;
+  }
+  
+  .list-comics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .preview-cover,
+  .preview-more {
+    width: 55px;
+    height: 75px;
+  }
+  
+  .preview-more {
+    font-size: 0.8rem;
+  }
+  
+  .list-title {
+    font-size: 1.5rem;
   }
 }
 
 @media (max-width: 480px) {
-  .list-comics-grid {
-    grid-template-columns: 1fr;
+  .lists-page {
+    padding: 0.5rem;
+  }
+  
+  .page-header {
+    margin-bottom: 1.5rem;
   }
   
   .list-item {
@@ -374,11 +456,34 @@
   
   .preview-cover,
   .preview-more {
-    width: 45px;
-    height: 65px;
+    width: 50px;
+    height: 70px;
   }
   
   .preview-more {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
+  
+  .list-comic-cover {
+    height: 280px;
+  }
+}
+
+/* Add smooth scroll for better UX */
+.lists-overview,
+.list-comics-grid {
+  scroll-behavior: smooth;
+}
+
+/* Add focus styles for accessibility */
+.list-item:focus-visible,
+.back-button:focus-visible,
+.remove-from-list-btn:focus-visible {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 2px;
+}
+
+/* Improve list item spacing for long lists */
+.list-item:not(:last-child) {
+  margin-bottom: 0;
 }

@@ -4,7 +4,7 @@ import { getLists, addToList, createList, removeFromList } from '../controllers/
 const router = express.Router();
 
 router.get('/:userId', getLists);
-router.post('/', createList); // Add this line for list creation
+router.post('/', createList);
 router.post('/:listName/add', addToList);
 router.post('/:listName/remove', removeFromList);
 
