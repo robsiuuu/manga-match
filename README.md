@@ -2,6 +2,8 @@
 
 A manga discovery app that helps you find your next favorite comic! Swipe through recommendations, like your favorites, and organize them into custom lists.
 
+Video: https://uncg-my.sharepoint.com/:v:/g/personal/rrsiu_uncg_edu/IQCMVuUhaX2GSJ5TvDewb3WyAbx74xQPVRzCd4vF5l7QKkc?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=ROcwFP
+
 ## Features
 
 - 🎴 **Like/Dislike Interface** - Manga cards with interactions for manga discovery
