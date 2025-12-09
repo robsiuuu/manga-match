@@ -9,8 +9,6 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
   const [loading, setLoading] = useState(false);
   const [previewComicsData, setPreviewComicsData] = useState({});
   const [editingList, setEditingList] = useState(null);
-  const [newListName, setNewListName] = useState('');
-  const [showCreateList, setShowCreateList] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [editingListName, setEditingListName] = useState('');
 
@@ -207,28 +205,6 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
     }
   };
 
-  // Create new list
-  const handleCreateList = () => {
-    if (!newListName.trim()) {
-      setErrorMessage('List name cannot be empty');
-      setTimeout(() => setErrorMessage(''), 3000);
-      return;
-    }
-    
-    if (lists && lists[newListName.trim()]) {
-      setErrorMessage('List with this name already exists');
-      setTimeout(() => setErrorMessage(''), 3000);
-      return;
-    }
-    
-    if (onUpdateLists) {
-      const updatedLists = { ...lists, [newListName.trim()]: [] };
-      onUpdateLists(updatedLists);
-      setNewListName('');
-      setShowCreateList(false);
-    }
-  };
-
   // Load comic details when a list is selected
   useEffect(() => {
     const loadListComics = async () => {
@@ -405,54 +381,14 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
             <ArrowLeft size={20} />
             Back to Discovery
           </button>
-          <h2 className="page-title">My Lists</h2>
         </div>
         
-        <button 
-          className="create-list-btn"
-          onClick={() => setShowCreateList(true)}
-        >
-          <Plus size={18} />
-          Create New List
-        </button>
       </div>
 
       {errorMessage && (
         <div className="error-message">
           <AlertCircle size={16} />
           {errorMessage}
-        </div>
-      )}
-
-      {showCreateList && (
-        <div className="create-list-form">
-          <input
-            type="text"
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            placeholder="Enter list name"
-            autoFocus
-            onKeyPress={(e) => e.key === 'Enter' && handleCreateList()}
-            maxLength={50}
-          />
-          <div className="form-actions">
-            <button 
-              onClick={handleCreateList}
-              className="create-btn"
-              disabled={!newListName.trim()}
-            >
-              Create List
-            </button>
-            <button 
-              onClick={() => {
-                setShowCreateList(false);
-                setNewListName('');
-              }}
-              className="cancel-btn"
-            >
-              Cancel
-            </button>
-          </div>
         </div>
       )}
 
@@ -588,13 +524,6 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
             <Folder size={64} />
             <h3>No lists yet</h3>
             <p>Create your first list from the Liked page!</p>
-            <button 
-              className="create-list-btn"
-              onClick={() => setShowCreateList(true)}
-            >
-              <Plus size={18} />
-              Create Your First List
-            </button>
           </div>
         )}
       </div>

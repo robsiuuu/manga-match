@@ -26,17 +26,6 @@
   margin-bottom: 1rem;
 }
 
-.page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #1f2937;
-  margin: 0;
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .header-actions {
   display: flex;
   justify-content: space-between;
@@ -527,7 +516,6 @@
 }
 
 /* Forms */
-.create-list-form,
 .edit-list-form {
   background: linear-gradient(135deg, #ffffff, #f9fafb);
   padding: 1.5rem;
@@ -543,7 +531,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.create-list-form input,
 .edit-list-form input {
   width: 100%;
   padding: 1rem;
@@ -554,7 +541,6 @@
   background: white;
 }
 
-.create-list-form input:focus,
 .edit-list-form input:focus {
   outline: none;
   border-color: #8b5cf6;
@@ -609,28 +595,6 @@
 .cancel-btn:hover {
   background: #e5e7eb;
   transform: translateY(-2px);
-}
-
-.create-list-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  color: white;
-  border: none;
-  padding: 0.85rem 1.75rem;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
-}
-
-.create-list-btn:hover {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
 }
 
 /* Empty States */
@@ -726,7 +690,6 @@
 .list-item:focus-visible,
 .back-button:focus-visible,
 .remove-from-list-btn:focus-visible,
-.create-list-btn:focus-visible,
 .action-btn:focus-visible {
   outline: 3px solid #8b5cf6;
   outline-offset: 2px;
