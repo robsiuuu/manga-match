@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Folder, BookOpen, ChevronRight, X } from 'lucide-react';
+import { ArrowLeft, Folder, BookOpen, ChevronRight, X, Edit2, Trash2, Plus, AlertCircle } from 'lucide-react';
 import { api } from '../../api';
 import '../styles/ListsPage.css';
 
@@ -8,30 +8,34 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
   const [listComics, setListComics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [previewComicsData, setPreviewComicsData] = useState({});
+  const [editingList, setEditingList] = useState(null);
+  const [newListName, setNewListName] = useState('');
+  const [showCreateList, setShowCreateList] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [editingListName, setEditingListName] = useState('');
 
   // Load preview comics data for all lists
   useEffect(() => {
     const loadPreviewComics = async () => {
       try {
-        // Get all unique comic IDs from all lists
         const allComicIds = new Set();
         Object.values(lists || {}).forEach(comicIds => {
-          comicIds.forEach(id => allComicIds.add(id));
+          if (comicIds && Array.isArray(comicIds)) {
+            comicIds.forEach(id => allComicIds.add(id));
+          }
         });
 
         if (allComicIds.size > 0) {
           const comicIdsArray = Array.from(allComicIds);
-          
-          // Convert to integers for AniList API
           const aniListIds = comicIdsArray.map(id => parseInt(id)).filter(id => !isNaN(id));
           
           if (aniListIds.length > 0) {
             const comicsData = await api.getComicsBatch(aniListIds);
-            
-            // Create a map for quick lookup
             const comicsMap = {};
             comicsData.forEach(comic => {
-              comicsMap[comic.id] = comic;
+              if (comic && comic.id) {
+                comicsMap[comic.id] = comic;
+              }
             });
             setPreviewComicsData(comicsMap);
           }
@@ -48,39 +52,180 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
 
   // Function to get comic data by ID
   const getComicById = (id) => {
-    if (previewComicsData[id]) {
+    // First check preview data
+    if (previewComicsData && previewComicsData[id]) {
       return previewComicsData[id];
     }
-    const currentComic = comics.find(comic => comic.id === id);
-    return currentComic || null;
+    // Then check comics prop with null check
+    if (comics && Array.isArray(comics)) {
+      const currentComic = comics.find(comic => comic && comic.id === id);
+      return currentComic || null;
+    }
+    return null;
   };
 
   // Function to get preview comics for a list
   const getPreviewComics = (comicIds) => {
+    if (!comicIds || !Array.isArray(comicIds)) {
+      return [];
+    }
+    
     return comicIds
       .map(id => getComicById(id))
       .filter(comic => comic && comic.coverImage)
       .slice(0, 3);
   };
 
-  // Remove comic from list using your Neon database endpoint
+  // Remove comic from list
   const handleRemoveFromList = async (comicId) => {
     try {
-      // Use the remove endpoint for your Neon database
-      await api.removeFromList(selectedList, comicId);
+      if (!selectedList || !comicId) {
+        console.error('Missing list name or comic ID');
+        return;
+      }
       
-      // Update local state
-      const updatedListComics = listComics.filter(comic => comic.id !== comicId);
+      // Convert comicId to string for consistency
+      const comicIdStr = comicId.toString();
+      
+      console.log(`Removing comic ${comicIdStr} from list "${selectedList}"`);
+      
+      // 1. Update database first
+      const response = await api.removeFromList(selectedList, comicIdStr);
+      
+      if (!response.success) {
+        console.error('API error:', response.error);
+        return;
+      }
+      
+      // 2. Update local state for immediate UI feedback
+      const updatedListComics = listComics.filter(comic => comic && comic.id.toString() !== comicIdStr);
       setListComics(updatedListComics);
       
-      // Update parent component
-      if (onUpdateLists) {
+      // 3. Update lists object to keep count in sync
+      if (onUpdateLists && lists && lists[selectedList]) {
         const updatedLists = { ...lists };
-        updatedLists[selectedList] = updatedLists[selectedList].filter(id => id !== comicId);
+        
+        // Remove comic from the selected list
+        updatedLists[selectedList] = updatedLists[selectedList].filter(id => 
+          id && id.toString() !== comicIdStr
+        );
+        
+        // 4. Update preview data to remove the comic
+        const newPreviewData = { ...previewComicsData };
+        delete newPreviewData[comicId];
+        delete newPreviewData[comicIdStr];
+        setPreviewComicsData(newPreviewData);
+        
+        // 5. Call parent callback to update global state
         onUpdateLists(updatedLists);
       }
+      
+      console.log(`Successfully removed comic ${comicIdStr} from ${selectedList}`);
+      
     } catch (error) {
       console.error('Error removing comic from list:', error);
+      setErrorMessage('Failed to remove comic. Please try again.');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  };
+
+  // Rename list
+  const handleRenameList = async (oldName, newName) => {
+    try {
+      if (!newName || newName.trim() === '') {
+        setErrorMessage('List name cannot be empty');
+        setTimeout(() => setErrorMessage(''), 3000);
+        return;
+      }
+      
+      if (newName === oldName) {
+        setEditingList(null);
+        setEditingListName('');
+        return;
+      }
+      
+      // Check if list with new name already exists
+      if (lists && lists[newName.trim()]) {
+        setErrorMessage('List with this name already exists');
+        setTimeout(() => setErrorMessage(''), 3000);
+        return;
+      }
+      
+      const response = await api.renameList(oldName, newName.trim());
+      
+      if (response.success) {
+        // Update local state
+        if (onUpdateLists) {
+          const updatedLists = { ...lists };
+          updatedLists[newName.trim()] = updatedLists[oldName];
+          delete updatedLists[oldName];
+          onUpdateLists(updatedLists);
+          
+          // If currently viewing this list, update selected list
+          if (selectedList === oldName) {
+            setSelectedList(newName.trim());
+          }
+        }
+        
+        setEditingList(null);
+        setEditingListName('');
+      }
+    } catch (error) {
+      console.error('Error renaming list:', error);
+      setErrorMessage(error.message || 'Failed to rename list');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  };
+
+  // Delete list
+  const handleDeleteList = async (listName) => {
+    if (!window.confirm(`Are you sure you want to delete "${listName}"? This will remove all comics from this list.`)) {
+      return;
+    }
+    
+    try {
+      const response = await api.deleteList(listName);
+      
+      if (response.success) {
+        // Update local state
+        if (onUpdateLists) {
+          const updatedLists = { ...lists };
+          delete updatedLists[listName];
+          onUpdateLists(updatedLists);
+          
+          // If currently viewing this list, go back to lists overview
+          if (selectedList === listName) {
+            setSelectedList(null);
+            setListComics([]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting list:', error);
+      setErrorMessage(error.message || 'Failed to delete list');
+      setTimeout(() => setErrorMessage(''), 3000);
+    }
+  };
+
+  // Create new list
+  const handleCreateList = () => {
+    if (!newListName.trim()) {
+      setErrorMessage('List name cannot be empty');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+    
+    if (lists && lists[newListName.trim()]) {
+      setErrorMessage('List with this name already exists');
+      setTimeout(() => setErrorMessage(''), 3000);
+      return;
+    }
+    
+    if (onUpdateLists) {
+      const updatedLists = { ...lists, [newListName.trim()]: [] };
+      onUpdateLists(updatedLists);
+      setNewListName('');
+      setShowCreateList(false);
     }
   };
 
@@ -95,7 +240,7 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
           
           if (aniListIds.length > 0) {
             const comicsData = await api.getComicsBatch(aniListIds);
-            setListComics(comicsData);
+            setListComics(comicsData || []);
           } else {
             setListComics([]);
           }
@@ -111,7 +256,6 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
     loadListComics();
   }, [selectedList, lists]);
 
-  // Safe access to lists
   const safeLists = lists || {};
 
   // If a list is selected, show its contents
@@ -119,15 +263,81 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
     return (
       <div className="lists-page">
         <div className="page-header">
-          <button 
-            onClick={() => setSelectedList(null)}
-            className="back-button"
-          >
-            <ArrowLeft size={20} />
-            Back to Lists
-          </button>
-          <h2 className="list-title">{selectedList}</h2>
+          <div className="header-actions">
+            <button 
+              onClick={() => {
+                setSelectedList(null);
+                setEditingList(null);
+              }}
+              className="back-button"
+            >
+              <ArrowLeft size={20} />
+              All Lists
+            </button>
+            <div className="list-actions">
+              <button 
+                className="action-btn edit-btn"
+                onClick={() => {
+                  setEditingList(selectedList);
+                  setEditingListName(selectedList);
+                }}
+                title="Rename list"
+              >
+                <Edit2 size={16} />
+              </button>
+              <button 
+                className="action-btn delete-btn"
+                onClick={() => handleDeleteList(selectedList)}
+                title="Delete list"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+          
+          {editingList === selectedList ? (
+            <div className="edit-list-form">
+              <input
+                type="text"
+                value={editingListName}
+                onChange={(e) => setEditingListName(e.target.value)}
+                placeholder="Enter new list name"
+                autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && handleRenameList(selectedList, editingListName)}
+              />
+              <div className="edit-form-actions">
+                <button 
+                  onClick={() => handleRenameList(selectedList, editingListName)}
+                  className="save-btn"
+                >
+                  Save
+                </button>
+                <button 
+                  onClick={() => {
+                    setEditingList(null);
+                    setEditingListName('');
+                  }}
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <h2 className="list-title">{selectedList}</h2>
+          )}
+          
+          {listComics.length > 0 && (
+            <p className="list-stats">{listComics.length} comic{listComics.length !== 1 ? 's' : ''}</p>
+          )}
         </div>
+
+        {errorMessage && (
+          <div className="error-message">
+            <AlertCircle size={16} />
+            {errorMessage}
+          </div>
+        )}
 
         {loading ? (
           <div className="loading">Loading comics...</div>
@@ -135,7 +345,6 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
           <div className="list-comics-grid">
             {listComics.map(comic => (
               <div key={comic.id} className="list-comic-card">
-                {/* Remove Button */}
                 <button 
                   className="remove-from-list-btn"
                   onClick={() => handleRemoveFromList(comic.id)}
@@ -191,30 +400,151 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
   return (
     <div className="lists-page">
       <div className="page-header">
-        <button onClick={onBackClick} className="back-button">
-          <ArrowLeft size={20} />
-          Back to Discovery
+        <div className="header-main">
+          <button onClick={onBackClick} className="back-button">
+            <ArrowLeft size={20} />
+            Back to Discovery
+          </button>
+          <h2 className="page-title">My Lists</h2>
+        </div>
+        
+        <button 
+          className="create-list-btn"
+          onClick={() => setShowCreateList(true)}
+        >
+          <Plus size={18} />
+          Create New List
         </button>
       </div>
 
+      {errorMessage && (
+        <div className="error-message">
+          <AlertCircle size={16} />
+          {errorMessage}
+        </div>
+      )}
+
+      {showCreateList && (
+        <div className="create-list-form">
+          <input
+            type="text"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            placeholder="Enter list name"
+            autoFocus
+            onKeyPress={(e) => e.key === 'Enter' && handleCreateList()}
+            maxLength={50}
+          />
+          <div className="form-actions">
+            <button 
+              onClick={handleCreateList}
+              className="create-btn"
+              disabled={!newListName.trim()}
+            >
+              Create List
+            </button>
+            <button 
+              onClick={() => {
+                setShowCreateList(false);
+                setNewListName('');
+              }}
+              className="cancel-btn"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="lists-overview">
         {Object.entries(safeLists).map(([listName, comicIds]) => {
-          const previewComics = getPreviewComics(comicIds);
-          const totalComics = comicIds.length;
+          const previewComics = getPreviewComics(comicIds || []);
+          const totalComics = comicIds ? comicIds.length : 0;
           
           return (
             <div 
               key={listName} 
               className="list-item"
-              onClick={() => setSelectedList(listName)}
+              onClick={() => !editingList && setSelectedList(listName)}
             >
               <div className="list-item-header">
                 <Folder size={20} />
                 <div className="list-item-info">
-                  <h3>{listName}</h3>
+                  <div className="list-title-row">
+                    {editingList === listName ? (
+                      <input
+                        type="text"
+                        value={editingListName}
+                        onChange={(e) => setEditingListName(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleRenameList(listName, editingListName);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                        className="edit-input-inline"
+                      />
+                    ) : (
+                      <h3>{listName}</h3>
+                    )}
+                    <span className="count-badge">{totalComics}</span>
+                  </div>
                   <p>{totalComics} comic{totalComics !== 1 ? 's' : ''}</p>
                 </div>
-                <ChevronRight size={20} className="chevron" />
+                <div className="list-actions">
+                  {editingList !== listName && (
+                    <>
+                      <button 
+                        className="action-btn edit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingList(listName);
+                          setEditingListName(listName);
+                        }}
+                        title="Rename list"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        className="action-btn delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteList(listName);
+                        }}
+                        title="Delete list"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
+                  {editingList !== listName && <ChevronRight size={20} className="chevron" />}
+                  {editingList === listName && (
+                    <div className="inline-edit-actions">
+                      <button 
+                        className="action-btn save-btn-inline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRenameList(listName, editingListName);
+                        }}
+                        title="Save"
+                      >
+                        ✓
+                      </button>
+                      <button 
+                        className="action-btn cancel-btn-inline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingList(null);
+                          setEditingListName('');
+                        }}
+                        title="Cancel"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Preview of comics in this list */}
@@ -239,7 +569,7 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
               ) : totalComics > 0 ? (
                 // Show loading placeholders
                 <div className="list-preview">
-                  {comicIds.slice(0, 3).map((comicId, index) => (
+                  {(comicIds || []).slice(0, 3).map((comicId, index) => (
                     <div key={index} className="preview-cover placeholder">
                       <BookOpen size={16} />
                     </div>
@@ -258,6 +588,13 @@ const ListsPage = ({ lists, comics, onBackClick, onUpdateLists }) => {
             <Folder size={64} />
             <h3>No lists yet</h3>
             <p>Create your first list from the Liked page!</p>
+            <button 
+              className="create-list-btn"
+              onClick={() => setShowCreateList(true)}
+            >
+              <Plus size={18} />
+              Create Your First List
+            </button>
           </div>
         )}
       </div>

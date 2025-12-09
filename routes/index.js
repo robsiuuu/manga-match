@@ -12,7 +12,9 @@ import {
   getLists,
   createList,
   addToList,
-  removeFromList
+  removeFromList,
+  renameList,    // ADD THIS
+  deleteList     // ADD THIS
 } from '../controllers/listsController.js';
 
 // Import auth middleware
@@ -41,7 +43,9 @@ router.get('/', (req, res) => {
           get: 'GET /api/lists (auth required)',
           create: 'POST /api/lists (auth required)',
           addItem: 'POST /api/lists/:listName/add (auth required)',
-          removeItem: 'POST /api/lists/:listName/remove (auth required)'
+          removeItem: 'POST /api/lists/:listName/remove (auth required)',
+          rename: 'PUT /api/lists/:listName/rename (auth required)',    // ADD THIS
+          delete: 'DELETE /api/lists/:listName (auth required)'         // ADD THIS
         }
       }
     }
@@ -60,5 +64,7 @@ router.get('/lists', requireAuth, getLists);
 router.post('/lists', requireAuth, createList);
 router.post('/lists/:listName/add', requireAuth, addToList);
 router.post('/lists/:listName/remove', requireAuth, removeFromList);
+router.put('/lists/:listName/rename', requireAuth, renameList);    // ADD THIS
+router.delete('/lists/:listName', requireAuth, deleteList);        // ADD THIS
 
 export default router;

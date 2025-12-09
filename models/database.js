@@ -11,7 +11,7 @@ export const pool = new Pool({
   }
 });
 
-// Create tables if they don't exist
+// Create tables if they don't exist - SIMPLE VERSION
 export const initDB = async () => {
   try {
     await pool.query(`
@@ -23,13 +23,8 @@ export const initDB = async () => {
         email VARCHAR(255),
         picture TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT unique_googleid UNIQUE (googleid)
       );
-      
-      -- Create index for faster lookups
-      CREATE INDEX IF NOT EXISTS idx_users_googleid ON users(googleid);
-      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       
       -- User likes table
       CREATE TABLE IF NOT EXISTS user_likes (
@@ -44,10 +39,6 @@ export const initDB = async () => {
           ON DELETE CASCADE
       );
       
-      -- Create index for user likes
-      CREATE INDEX IF NOT EXISTS idx_user_likes_user_id ON user_likes(user_id);
-      CREATE INDEX IF NOT EXISTS idx_user_likes_comic_id ON user_likes(comic_id);
-      
       -- Lists table
       CREATE TABLE IF NOT EXISTS lists (
         id SERIAL PRIMARY KEY,
@@ -61,9 +52,6 @@ export const initDB = async () => {
           ON DELETE CASCADE
       );
       
-      -- Create index for lists
-      CREATE INDEX IF NOT EXISTS idx_lists_user_id ON lists(user_id);
-      
       -- List items table
       CREATE TABLE IF NOT EXISTS list_items (
         id SERIAL PRIMARY KEY,
@@ -76,12 +64,10 @@ export const initDB = async () => {
           REFERENCES lists(id) 
           ON DELETE CASCADE
       );
-      
-      -- Create index for list items
-      CREATE INDEX IF NOT EXISTS idx_list_items_list_id ON list_items(list_id);
-      CREATE INDEX IF NOT EXISTS idx_list_items_comic_id ON list_items(comic_id);
     `);
+    
     console.log('✅ Database tables initialized');
+    
   } catch (error) {
     console.error('❌ Database initialization error:', error);
   }
